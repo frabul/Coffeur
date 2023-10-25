@@ -217,26 +217,53 @@ class ConstType(TypeInfo):
         super().__init__(name, self.target_type.get_size())
 
 
+class BitFieldMemberInfo:
+    def __init__(self, bit_offset: int, bit_size: int):
+        self.bit_offset = bit_offset
+        self.bit_size = bit_size
+
+
+class MemberInfo:
+    def __init__(
+        self, name: str, offset: int, type: TypeInfo, bitfield_info: BitFieldMemberInfo = None
+    ):
+        self.name = name
+        self.offset = offset
+        self.type = type
+        self.bitfield_info = bitfield_info
+
+
 class StructDefinition(TypeInfo):
     def __init__(self, die: DIE):
         name: str = "struct " + get_die_name(die)
         size: int = die.attributes["DW_AT_byte_size"].value
         super().__init__(name, size)
 
-        self.members: dict[str, TypeInfo] = {}
+        self.members: dict[str, MemberInfo] = {}
         for child in [x for x in die.iter_children() if x.tag == "DW_TAG_member"]:
             member_name = get_die_name(child)
             member_type = TypeInfo.parse(
                 die.dwarfinfo.get_DIE_from_refaddr(child.attributes["DW_AT_type"].value)
             )
             member_offset = calculate_member_offset(child)
-            self.members[member_name] = (member_offset, member_type)
+            bitInfo = None
+            if "DW_AT_bit_offset" in child.attributes:
+                bit_offset = child.attributes["DW_AT_bit_offset"].value
+                bit_size = child.attributes["DW_AT_bit_size"].value
+                bitInfo = BitFieldMemberInfo(bit_offset, bit_size)
+
+            self.members[member_name] = MemberInfo(
+                member_name, member_offset, member_type, bitInfo
+            )
 
     def get_member(self, name: str) -> tuple[int, TypeInfo]:
         """returns the offset and the type of the member"""
         if name not in self.members:
             raise Exception(f"get_member: member '{name}' not found inf {self.name}")
         return self.members[name]
+
+    def get_members(self) -> list[MemberInfo]:
+        return self.members.values()
 
     def is_struct(self) -> bool:
         return True
@@ -256,14 +283,22 @@ class UnionDefinition(StructDefinition):
 
 class Variable:
     def __init__(
-        self, path: str, die: DIE = None, address: int = None, type: TypeInfo = None
+        self,
+        path: str,
+        die: DIE = None,
+        address: int = None,
+        type: TypeInfo = None,
+        bit_field_info: BitFieldMemberInfo = None,
     ):
         self.die = die
         self.address: int = address
         self.path = path
-        self.members = {}
+        self.bit_size = None
+        self.bit_offset = None
+        self.bit_size = None
+
         if self.die is not None:
-            if not (address is None or type is None):
+            if not (address is None and type is None and bit_field_info is None):
                 raise Exception(
                     "Variable: provide only die or (address and type), not both"
                 )
@@ -279,24 +314,32 @@ class Variable:
                 raise Exception("Variable: provide die or (address and type)")
             self.type = type
             self.address = address
+            self.bit_field_info = bit_field_info
 
     @staticmethod
     def from_die(die: DIE) -> "Variable":
         return Variable(path=get_die_name(die), die=die)
 
     @staticmethod
-    def from_address(path: str, address: int, type: TypeInfo) -> "Variable":
-        return Variable(path=path, address=address, type=type)
+    def from_address(
+        path: str, address: int, type: TypeInfo, bit_field_info: BitFieldMemberInfo = None
+    ) -> "Variable":
+        return Variable(
+            path=path, address=address, type=type, bit_field_info=bit_field_info
+        )
 
     def get_member(self, name: str) -> "Variable":
         while type(self.type) is Typedef:
             self.type = self.type.target_type
 
-        if type(self.type) is not StructDefinition:
+        if not isinstance(self.type, StructDefinition):
             raise Exception(f"get_member: the variable {self.path} is not a struct ")
-        moffset, mtype = self.type.get_member(name)
+        memberInfo: MemberInfo = self.type.get_member(name)
         return Variable.from_address(
-            path=f"{self.path}.{name}", address=self.address + moffset, type=mtype
+            self.get_member_path(memberInfo),
+            address=self.address + memberInfo.offset,
+            type=memberInfo.type,
+            bit_field_info=memberInfo.bitfield_info,
         )
 
     def dereference(self) -> "Variable":
@@ -338,16 +381,24 @@ class Variable:
             return struct.unpack(env.endianness + format_str, raw_value)[0]
         else:
             raise Exception(f"Variable.get_value: type {targetType} not supported ")
+    def get_member_path(self,memberInfo : MemberInfo) -> str:
+        if memberInfo.bitfield_info is not None:
+            return f"{self.path}.{memberInfo.name}[{memberInfo.bitfield_info.bit_offset}:{memberInfo.bitfield_info.bit_size}]"
+        return f"{self.path}.{memberInfo.name}"
 
     def get_members(self) -> list["Variable"]:
-        if type(self.type) not in [StructDefinition, UnionDefinition]:
+        if not isinstance(self.type, StructDefinition):
             raise Exception(f"get_members: the variable {self.path} is not a struct ")
         members = []
-        for  mename, (os, mtype) in self.type.members.items():
-            m = Variable.from_address(
-                path=f"{self.path}.{mename}", address=self.address + os, type=mtype
+        for memberInfo in self.type.get_members():
+            members.append(
+                Variable.from_address(
+                    self.get_member_path(memberInfo),
+                    address=self.address + memberInfo.offset,
+                    type=memberInfo.type,
+                    bit_field_info=memberInfo.bitfield_info,
+                )
             )
-            members.append(m)
         return members
 
     def get_size(self) -> int:
