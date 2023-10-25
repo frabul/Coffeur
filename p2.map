@@ -1,0 +1,267 @@
+******************************************************************************
+             TMS320C2000 Linker PC v22.6.1                     
+******************************************************************************
+>> Linked Tue Oct 17 08:57:39 2023
+
+OUTPUT FILE NAME:   <p2.out>
+ENTRY POINT SYMBOL: "_c_int00"  address: 0008201c
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+PAGE 0:
+  RAMM0                 00000122   000002de  00000000  000002de  RWIX
+  RAMLS0                00008000   00000800  00000000  00000800  RWIX
+  RAMLS1                00008800   00000800  00000000  00000800  RWIX
+  RAMLS2                00009000   00000800  00000000  00000800  RWIX
+  RAMLS3                00009800   00000800  00000000  00000800  RWIX
+  RAMLS4                0000a000   00000800  00000000  00000800  RWIX
+  RAMD0                 0000b000   00000800  00000000  00000800  RWIX
+  BEGIN                 00080000   00000002  00000000  00000002  RWIX
+  FLASHA                00080002   00001ffe  00000000  00001ffe  RWIX
+  FLASHB                00082000   00002000  00000103  00001efd  RWIX
+  FLASHC                00084000   00002000  00000000  00002000  RWIX
+  FLASHD                00086000   00002000  00000000  00002000  RWIX
+  FLASHE                00088000   00008000  00000000  00008000  RWIX
+  FLASHF                00090000   00008000  00000000  00008000  RWIX
+  FLASHG                00098000   00008000  00000000  00008000  RWIX
+  FLASHH                000a0000   00008000  00000000  00008000  RWIX
+  FLASHI                000a8000   00008000  00000000  00008000  RWIX
+  FLASHJ                000b0000   00008000  00000000  00008000  RWIX
+  FLASHK                000b8000   00002000  00000000  00002000  RWIX
+  FLASHL                000ba000   00002000  00000000  00002000  RWIX
+  FLASHM                000bc000   00002000  00000000  00002000  RWIX
+  FLASHN                000be000   00001ff0  00000000  00001ff0  RWIX
+  FLASHN_DO_NOT_USE     000bfff0   00000010  00000000  00000010  RWIX
+  RESET                 003fffc0   00000002  00000000  00000002  RWIX
+
+PAGE 1:
+  BOOT_RSVD             00000002   00000120  00000000  00000120  RWIX
+  RAMM1                 00000400   00000400  00000200  00000200  RWIX
+  RAMLS5                0000a800   00000800  00000036  000007ca  RWIX
+  RAMD1                 0000b800   00000800  00000000  00000800  RWIX
+  RAMGS0                0000c000   00001000  00000000  00001000  RWIX
+  RAMGS1                0000d000   00001000  00000000  00001000  RWIX
+  RAMGS2                0000e000   00001000  00000000  00001000  RWIX
+  RAMGS3                0000f000   00001000  00000000  00001000  RWIX
+  RAMGS4                00010000   00001000  00000000  00001000  RWIX
+  RAMGS5                00011000   00001000  00000000  00001000  RWIX
+  RAMGS6                00012000   00001000  00000000  00001000  RWIX
+  RAMGS7                00013000   00001000  00000000  00001000  RWIX
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.cinit     0    00082000    0000001a     
+                  00082000    0000000e     rts2800_fpu32.lib : exit.c.obj (.cinit)
+                  0008200e    00000005                       : _lock.c.obj (.cinit:__lock)
+                  00082013    00000005                       : _lock.c.obj (.cinit:__unlock)
+                  00082018    00000002     --HOLE-- [fill = 0]
+
+.pinit     0    00082000    00000000     UNINITIALIZED
+
+.TI.ramfunc 
+*          0    00008000    00000000     UNINITIALIZED
+
+.stack     1    00000400    00000200     UNINITIALIZED
+                  00000400    00000200     --HOLE--
+
+.reset     0    003fffc0    00000002     DSECT
+                  003fffc0    00000002     rts2800_fpu32.lib : boot28.asm.obj (.reset)
+
+.TI.memcrc 
+*          0    00000000    00000066     COPY SECTION
+                  00000000    00000066     (.TI.memcrc:_ccs_flash_checksum)
+
+.text      0    0008201c    000000e9     
+                  0008201c    00000056     rts2800_fpu32.lib : boot28.asm.obj (.text)
+                  00082072    00000029                       : exit.c.obj (.text)
+                  0008209b    00000024                       : cpy_tbl.c.obj (.text)
+                  000820bf    0000001d                       : memcpy.c.obj (.text)
+                  000820dc    00000012                       : args_main.c.obj (.text)
+                  000820ee    0000000b     main.obj (.text)
+                  000820f9    00000009     rts2800_fpu32.lib : _lock.c.obj (.text)
+                  00082102    00000002                       : pre_init.c.obj (.text)
+                  00082104    00000001                       : startup.c.obj (.text)
+
+.ebss      1    0000a800    00000036     UNINITIALIZED
+                  0000a800    0000002c     main.obj (.ebss)
+                  0000a82c    00000006     rts2800_fpu32.lib : exit.c.obj (.ebss)
+                  0000a832    00000002                       : _lock.c.obj (.ebss:__lock)
+                  0000a834    00000002                       : _lock.c.obj (.ebss:__unlock)
+
+MODULE SUMMARY
+
+       Module            code   initialized data   uninitialized data
+       ------            ----   ----------------   ------------------
+    .\
+       main.obj          11     0                  44                
+    +--+-----------------+------+------------------+--------------------+
+       Total:            11     0                  44                
+                                                                     
+    C:\ti\ccs1250\ccs\tools\compiler\ti-cgt-c2000_22.6.1.LTS\lib\rts2800_fpu32.lib
+       boot28.asm.obj    86     0                  0                 
+       exit.c.obj        41     14                 6                 
+       cpy_tbl.c.obj     36     0                  0                 
+       memcpy.c.obj      29     0                  0                 
+       _lock.c.obj       9      10                 4                 
+       args_main.c.obj   18     0                  0                 
+       pre_init.c.obj    2      0                  0                 
+       startup.c.obj     1      0                  0                 
+    +--+-----------------+------+------------------+--------------------+
+       Total:            222    24                 10                
+                                                                     
+       Stack:            0      0                  512               
+    +--+-----------------+------+------------------+--------------------+
+       Grand Total:      233    24                 566               
+
+
+LINKER GENERATED MEMRANGE CRC TABLES
+
+_ccs_flash_checksum @ 00000000 records: 16, size/record: 6, table size: 102, algorithm=C28_CHECKSUM_16(ID=13), CRC: 00000ef5
+	BEGIN: page=0, load addr=00080000, size=00000002
+	FLASHA: page=0, load addr=00080002, size=00001ffe
+	FLASHB: page=0, load addr=00082000, size=00002000
+	FLASHC: page=0, load addr=00084000, size=00002000
+	FLASHD: page=0, load addr=00086000, size=00002000
+	FLASHE: page=0, load addr=00088000, size=00008000
+	FLASHF: page=0, load addr=00090000, size=00008000
+	FLASHG: page=0, load addr=00098000, size=00008000
+	FLASHH: page=0, load addr=000a0000, size=00008000
+	FLASHI: page=0, load addr=000a8000, size=00008000
+	FLASHJ: page=0, load addr=000b0000, size=00008000
+	FLASHK: page=0, load addr=000b8000, size=00002000
+	FLASHL: page=0, load addr=000ba000, size=00002000
+	FLASHM: page=0, load addr=000bc000, size=00002000
+	FLASHN: page=0, load addr=000be000, size=00001ff0
+	FLASHN_DO_NOT_USE: page=0, load addr=000bfff0, size=00000010
+
+
+GLOBAL DATA SYMBOLS: SORTED BY DATA PAGE
+
+address     data page           name
+--------    ----------------    ----
+00000400      10 (00000400)     __stack
+
+0000a800     2a0 (0000a800)     _myinstance1
+0000a808     2a0 (0000a800)     _myinstance2
+0000a810     2a0 (0000a800)     _myinstance4
+0000a81a     2a0 (0000a800)     _myinstance3
+0000a82c     2a0 (0000a800)     ___TI_enable_exit_profile_output
+0000a82e     2a0 (0000a800)     ___TI_cleanup_ptr
+0000a830     2a0 (0000a800)     ___TI_dtors_ptr
+0000a832     2a0 (0000a800)     __lock
+0000a834     2a0 (0000a800)     __unlock
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+page  address   name                                 
+----  -------   ----                                 
+abs   ffffffff  .text                                
+0     00082072  C$$EXIT                              
+0     00008000  _RamfuncsLoadEnd                     
+abs   00000000  _RamfuncsLoadSize                    
+0     00008000  _RamfuncsLoadStart                   
+0     00008000  _RamfuncsRunEnd                      
+abs   00000000  _RamfuncsRunSize                     
+0     00008000  _RamfuncsRunStart                    
+1     00000600  __STACK_END                          
+abs   00000200  __STACK_SIZE                         
+0     00000000  __TI_MEMRANGE_CRC__ccs_flash_checksum
+1     0000a82e  ___TI_cleanup_ptr                    
+1     0000a830  ___TI_dtors_ptr                      
+1     0000a82c  ___TI_enable_exit_profile_output     
+abs   ffffffff  ___TI_pprof_out_hndl                 
+abs   ffffffff  ___TI_prof_data_size                 
+abs   ffffffff  ___TI_prof_data_start                
+abs   ffffffff  ___binit__                           
+abs   ffffffff  ___c_args__                          
+0     00082000  ___cinit__                           
+abs   ffffffff  ___etext__                           
+abs   ffffffff  ___pinit__                           
+abs   ffffffff  ___text__                            
+0     000820dc  __args_main                          
+1     0000a832  __lock                               
+0     00082101  __nop                                
+0     000820fd  __register_lock                      
+0     000820f9  __register_unlock                    
+1     00000400  __stack                              
+0     00082104  __system_post_cinit                  
+0     00082102  __system_pre_init                    
+1     0000a834  __unlock                             
+0     00082072  _abort                               
+0     0008201c  _c_int00                             
+0     00000000  _ccs_flash_checksum                  
+0     0008209b  _copy_in                             
+0     00082074  _exit                                
+0     000820ee  _main                                
+0     000820bf  _memcpy                              
+1     0000a800  _myinstance1                         
+1     0000a808  _myinstance2                         
+1     0000a81a  _myinstance3                         
+1     0000a810  _myinstance4                         
+abs   ffffffff  binit                                
+0     00082000  cinit                                
+abs   ffffffff  etext                                
+abs   ffffffff  pinit                                
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+page  address   name                                 
+----  -------   ----                                 
+0     00000000  __TI_MEMRANGE_CRC__ccs_flash_checksum
+0     00000000  _ccs_flash_checksum                  
+0     00008000  _RamfuncsLoadEnd                     
+0     00008000  _RamfuncsLoadStart                   
+0     00008000  _RamfuncsRunEnd                      
+0     00008000  _RamfuncsRunStart                    
+0     00082000  ___cinit__                           
+0     00082000  cinit                                
+0     0008201c  _c_int00                             
+0     00082072  C$$EXIT                              
+0     00082072  _abort                               
+0     00082074  _exit                                
+0     0008209b  _copy_in                             
+0     000820bf  _memcpy                              
+0     000820dc  __args_main                          
+0     000820ee  _main                                
+0     000820f9  __register_unlock                    
+0     000820fd  __register_lock                      
+0     00082101  __nop                                
+0     00082102  __system_pre_init                    
+0     00082104  __system_post_cinit                  
+1     00000400  __stack                              
+1     00000600  __STACK_END                          
+1     0000a800  _myinstance1                         
+1     0000a808  _myinstance2                         
+1     0000a810  _myinstance4                         
+1     0000a81a  _myinstance3                         
+1     0000a82c  ___TI_enable_exit_profile_output     
+1     0000a82e  ___TI_cleanup_ptr                    
+1     0000a830  ___TI_dtors_ptr                      
+1     0000a832  __lock                               
+1     0000a834  __unlock                             
+abs   00000000  _RamfuncsLoadSize                    
+abs   00000000  _RamfuncsRunSize                     
+abs   00000200  __STACK_SIZE                         
+abs   ffffffff  .text                                
+abs   ffffffff  ___TI_pprof_out_hndl                 
+abs   ffffffff  ___TI_prof_data_size                 
+abs   ffffffff  ___TI_prof_data_start                
+abs   ffffffff  ___binit__                           
+abs   ffffffff  ___c_args__                          
+abs   ffffffff  ___etext__                           
+abs   ffffffff  ___pinit__                           
+abs   ffffffff  ___text__                            
+abs   ffffffff  binit                                
+abs   ffffffff  etext                                
+abs   ffffffff  pinit                                
+
+[47 symbols]
