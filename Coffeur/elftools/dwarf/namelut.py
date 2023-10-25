@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from ..common.utils import struct_parse
 from bisect import bisect_right
 import math
-from ..construct import CString, Struct, If
+from ..construct import CString, Struct, If, Container
 
 NameLUTEntry = collections.namedtuple('NameLUTEntry', 'cu_ofs die_ofs')
 
@@ -165,8 +165,9 @@ class NameLUT(Mapping):
         # So, field "name" is conditional.
         entry_struct = Struct("Dwarf_offset_name_pair",
                 self._structs.Dwarf_offset('die_ofs'),
-                If(lambda ctx: ctx['die_ofs'], CString('name')))
-
+                If(lambda ctx: ctx['die_ofs'], CString('name')),
+                nested = False)
+        
         # each run of this loop will fetch one CU worth of entries.
         while offset < self._size:
 
@@ -182,19 +183,18 @@ class NameLUT(Mapping):
             # loop to avoid attribute access and other computation.
             hdr_cu_ofs = namelut_hdr.debug_info_offset
 
-            # while die_ofs of the entry is non-zero (which indicates the end) ...
-            try:
-                while True:
-                    entry = struct_parse(entry_struct, self._stream)
+            # while die_ofs of the entry is non-zero (which indicates the end) ... 
+            # that means the offset of the new entry should allow enough spece for at least an entry_struct!
+            while self._stream.tell() + entry_struct.sizeof(Container(die_ofs=0)) < offset: 
+                entry = struct_parse(entry_struct, self._stream)
+               
+                # if it is zero, this is the terminating record.
+                if entry.die_ofs == 0:
+                    break
+                # add this entry to the look-up dictionary.
+                entries[entry.name.decode('utf-8')] = NameLUTEntry(
+                        cu_ofs = hdr_cu_ofs,
+                        die_ofs = hdr_cu_ofs + entry.die_ofs)
 
-                    # if it is zero, this is the terminating record.
-                    if entry.die_ofs == 0:
-                        break
-                    # add this entry to the look-up dictionary.
-                    entries[entry.name.decode('utf-8')] = NameLUTEntry(
-                            cu_ofs = hdr_cu_ofs,
-                            die_ofs = hdr_cu_ofs + entry.die_ofs)
-            except:
-                pass
         # return the entries parsed so far.
         return (entries, cu_headers)

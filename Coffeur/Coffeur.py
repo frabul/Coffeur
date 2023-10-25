@@ -11,9 +11,9 @@ It also allows to read variable values and derefere points from a memory dump if
 
 import io
 from . import ti_coff
-from elftools.dwarf.dwarfinfo import DWARFInfo, DwarfConfig
-from elftools.dwarf.die import DIE
-from elftools.common.utils import bytes2str
+from . elftools.dwarf.dwarfinfo import DWARFInfo, DwarfConfig
+from . elftools.dwarf.die import DIE
+from . elftools.common.utils import bytes2str
 import regex as re
 from enum import Enum
 import struct
