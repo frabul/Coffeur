@@ -573,10 +573,14 @@ class Coffeur:
         return self.dwarfer.get_variable(path)
 
     def get_variables(self) -> list["Variable"]:
-        for symbolEntry in self.dwarfer.dwarfInfo.get_pubnames().values():
-            instanceDie = self.dwarfer.dwarfInfo.get_DIE_from_lut_entry(symbolEntry)
-            if instanceDie.tag == "DW_TAG_variable":
-                try:
+        pub_names = self.dwarfer.dwarfInfo.get_pubnames() 
+
+        for name in pub_names:
+            try:
+                symbolEntry = pub_names[name]
+                instanceDie = self.dwarfer.dwarfInfo.get_DIE_from_lut_entry(symbolEntry)
+                if instanceDie.tag == "DW_TAG_variable": 
                     yield Variable.from_die(instanceDie)
-                except:
-                    print("Skipping variable ", get_die_name(instanceDie))  # noqa: T001
+            except Exception as ex: 
+                print(f"Skipping variable {name} because {ex}"  )  # noqa: T001 
+           
