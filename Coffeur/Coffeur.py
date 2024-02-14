@@ -11,9 +11,9 @@ It also allows to read variable values and derefere points from a memory dump if
 
 import io
 from . import ti_coff
-from . elftools.dwarf.dwarfinfo import DWARFInfo, DwarfConfig
-from . elftools.dwarf.die import DIE
-from . elftools.common.utils import bytes2str
+from .elftools.dwarf.dwarfinfo import DWARFInfo, DwarfConfig
+from .elftools.dwarf.die import DIE
+from .elftools.common.utils import bytes2str
 import regex as re
 from enum import Enum
 import struct
@@ -100,6 +100,9 @@ class TypeInfo:
     def is_struct(self) -> bool:
         return False
 
+    def is_enum(self) -> bool:
+        return False
+
     def is_typedef(self) -> bool:
         return False
 
@@ -125,6 +128,8 @@ class TypeInfo:
     def parse(die: DIE) -> "TypeInfo":
         if die.tag == "DW_TAG_typedef":
             return Typedef(die)
+        elif die.tag == "DW_TAG_enumeration_type":
+            return EnumType(die)
         elif die.tag == "DW_TAG_base_type":
             return BaseType(die)
         elif die.tag == "DW_TAG_pointer_type":
@@ -144,6 +149,16 @@ class TypeInfo:
             )
         else:
             raise Exception(f"TypeInfo.parse: tag {die.tag} not supported")
+
+
+class EnumType(TypeInfo):
+    def __init__(self, die: DIE):
+        name: str = get_die_name(die)
+        size = die.attributes["DW_AT_byte_size"].value
+        super().__init__(name, size)
+
+    def is_enum(self) -> bool:
+        return True
 
 
 class ArrayType(TypeInfo):
@@ -225,7 +240,11 @@ class BitFieldMemberInfo:
 
 class MemberInfo:
     def __init__(
-        self, name: str, offset: int, type: TypeInfo, bitfield_info: BitFieldMemberInfo = None
+        self,
+        name: str,
+        offset: int,
+        type: TypeInfo,
+        bitfield_info: BitFieldMemberInfo = None,
     ):
         self.name = name
         self.offset = offset
@@ -322,7 +341,10 @@ class Variable:
 
     @staticmethod
     def from_address(
-        path: str, address: int, type: TypeInfo, bit_field_info: BitFieldMemberInfo = None
+        path: str,
+        address: int,
+        type: TypeInfo,
+        bit_field_info: BitFieldMemberInfo = None,
     ) -> "Variable":
         return Variable(
             path=path, address=address, type=type, bit_field_info=bit_field_info
@@ -381,7 +403,8 @@ class Variable:
             return struct.unpack(env.endianness + format_str, raw_value)[0]
         else:
             raise Exception(f"Variable.get_value: type {targetType} not supported ")
-    def get_member_path(self,memberInfo : MemberInfo) -> str:
+
+    def get_member_path(self, memberInfo: MemberInfo) -> str:
         if memberInfo.bitfield_info is not None:
             return f"{self.path}.{memberInfo.name}[{memberInfo.bitfield_info.bit_offset}:{memberInfo.bitfield_info.bit_size}]"
         return f"{self.path}.{memberInfo.name}"
@@ -573,14 +596,13 @@ class Coffeur:
         return self.dwarfer.get_variable(path)
 
     def get_variables(self) -> list["Variable"]:
-        pub_names = self.dwarfer.dwarfInfo.get_pubnames() 
+        pub_names = self.dwarfer.dwarfInfo.get_pubnames()
 
         for name in pub_names:
             try:
                 symbolEntry = pub_names[name]
                 instanceDie = self.dwarfer.dwarfInfo.get_DIE_from_lut_entry(symbolEntry)
-                if instanceDie.tag == "DW_TAG_variable": 
+                if instanceDie.tag == "DW_TAG_variable":
                     yield Variable.from_die(instanceDie)
-            except Exception as ex: 
-                print(f"Skipping variable {name} because {ex}"  )  # noqa: T001 
-           
+            except Exception as ex:
+                print(f"Skipping variable {name} because {ex}")  # noqa: T001
