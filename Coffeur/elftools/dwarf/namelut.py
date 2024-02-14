@@ -14,7 +14,7 @@ from ..common.utils import struct_parse
 from bisect import bisect_right
 import math
 from ..construct import CString, Struct, If, Container
-
+import sys
 NameLUTEntry = collections.namedtuple('NameLUTEntry', 'cu_ofs die_ofs')
 
 class NameLUT(Mapping):
@@ -185,16 +185,25 @@ class NameLUT(Mapping):
 
             # while die_ofs of the entry is non-zero (which indicates the end) ... 
             # that means the offset of the new entry should allow enough spece for at least an entry_struct!
-            while self._stream.tell() + entry_struct.sizeof(Container(die_ofs=0)) < offset: 
-                entry = struct_parse(entry_struct, self._stream)
-               
-                # if it is zero, this is the terminating record.
-                if entry.die_ofs == 0:
+            streamLen = sys.getsizeof(self._stream)
+            def get_end_of_entry():
+                return self._stream.tell() + entry_struct.sizeof(Container(die_ofs=0))
+           
+            while  get_end_of_entry() < offset and get_end_of_entry() < streamLen: 
+                try:
+                    entry = struct_parse(entry_struct, self._stream)
+                
+                    # if it is zero, this is the terminating record.
+                    if entry.die_ofs == 0:
+                        break
+                    # add this entry to the look-up dictionary.
+                    entries[entry.name.decode('utf-8')] = NameLUTEntry(
+                            cu_ofs = hdr_cu_ofs,
+                            die_ofs = hdr_cu_ofs + entry.die_ofs)
+                except:
+                    print(f"Error parsing entry at offset {self._stream.tell()}")
                     break
-                # add this entry to the look-up dictionary.
-                entries[entry.name.decode('utf-8')] = NameLUTEntry(
-                        cu_ofs = hdr_cu_ofs,
-                        die_ofs = hdr_cu_ofs + entry.die_ofs)
-
+            
+                
         # return the entries parsed so far.
         return (entries, cu_headers)
