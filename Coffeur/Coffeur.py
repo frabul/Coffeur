@@ -92,6 +92,12 @@ def calculate_member_offset(die: DIE) -> int:
         )
 
 
+class BitFieldMemberInfo:
+    def __init__(self, bit_offset: int, bit_size: int):
+        self.bit_offset = bit_offset
+        self.bit_size = bit_size
+
+
 class TypeInfo:
     def __init__(self, name: str, size: int):
         self.name: str = name
@@ -124,6 +130,9 @@ class TypeInfo:
     def get_size(self) -> int:
         return self.size
 
+    def final_type(self) -> "TypeInfo":
+        return self
+
     @staticmethod
     def parse(die: DIE) -> "TypeInfo":
         if die.tag == "DW_TAG_typedef":
@@ -149,6 +158,20 @@ class TypeInfo:
             )
         else:
             raise Exception(f"TypeInfo.parse: tag {die.tag} not supported")
+
+
+class MemberInfo:
+    def __init__(
+        self,
+        name: str,
+        offset: int,
+        type: TypeInfo,
+        bitfield_info: BitFieldMemberInfo = None,
+    ):
+        self.name = name
+        self.offset = offset
+        self.type = type
+        self.bitfield_info = bitfield_info
 
 
 class EnumType(TypeInfo):
@@ -191,12 +214,20 @@ class Typedef(TypeInfo):
     def get_member(self, name: str) -> tuple[int, TypeInfo]:
         self.target_type.get_member(name)
 
+    def get_members(self) -> list[MemberInfo]:
+        return self.target_type.get_members()
+
     def get_size(self) -> int:
         return self.target_type.get_size()
 
     def is_typedef(self) -> bool:
         return True
 
+    def final_type(self) -> TypeInfo:
+        ft = self.target_type
+        while type(ft) is Typedef:
+            ft = ft.target_type
+        return ft
 
 class BaseType(TypeInfo):
     def __init__(self, die: DIE):
@@ -230,26 +261,6 @@ class ConstType(TypeInfo):
         )
         name: str = "const " + self.target_type.name
         super().__init__(name, self.target_type.get_size())
-
-
-class BitFieldMemberInfo:
-    def __init__(self, bit_offset: int, bit_size: int):
-        self.bit_offset = bit_offset
-        self.bit_size = bit_size
-
-
-class MemberInfo:
-    def __init__(
-        self,
-        name: str,
-        offset: int,
-        type: TypeInfo,
-        bitfield_info: BitFieldMemberInfo = None,
-    ):
-        self.name = name
-        self.offset = offset
-        self.type = type
-        self.bitfield_info = bitfield_info
 
 
 class StructDefinition(TypeInfo):
@@ -410,7 +421,7 @@ class Variable:
         return f"{self.path}.{memberInfo.name}"
 
     def get_members(self) -> list["Variable"]:
-        if not isinstance(self.type, StructDefinition):
+        if not isinstance(self.type.final_type(), StructDefinition):
             raise Exception(f"get_members: the variable {self.path} is not a struct ")
         members = []
         for memberInfo in self.type.get_members():
