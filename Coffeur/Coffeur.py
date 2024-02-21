@@ -151,6 +151,8 @@ class TypeInfo:
             return StructDefinition(die)
         elif die.tag == "DW_TAG_union_type":
             return UnionDefinition(die)
+        elif die.tag == 'DW_TAG_unspecified_type':
+            return UnspecifiedType(die)
         elif die.tag == "DW_TAG_volatile_type" or die.tag == "DW_TAG_lo_user":
             # skipped tags
             return TypeInfo.parse(
@@ -238,6 +240,14 @@ class BaseType(TypeInfo):
     def is_base_type(self) -> bool:
         return True
 
+class UnspecifiedType(TypeInfo):
+    def __init__(self, die: DIE):
+        name: str = get_die_name(die)
+        size = 0 # die.attributes["DW_AT_byte_size"].value
+        super().__init__(name, size)
+
+    def is_base_type(self) -> bool:
+        return True
 
 class PointerType(TypeInfo):
     def __init__(self, die: DIE):
