@@ -191,7 +191,9 @@ class ArrayType(TypeInfo):
         self.target_type = TypeInfo.parse(
             die.dwarfinfo.get_DIE_from_refaddr(die.attributes["DW_AT_type"].value)
         )
-        self.size = die.attributes["DW_AT_byte_size"].value
+        self.size = 0 
+        if "DW_AT_byte_size" in die.attributes:
+            self.size = die.attributes["DW_AT_byte_size"].value
         self.element_count = (
             self.size / self.target_type.size
         )  # die.attributes["DW_AT_upper_bound"].value
@@ -231,6 +233,7 @@ class Typedef(TypeInfo):
             ft = ft.target_type
         return ft
 
+
 class BaseType(TypeInfo):
     def __init__(self, die: DIE):
         name: str = get_die_name(die)
@@ -240,14 +243,16 @@ class BaseType(TypeInfo):
     def is_base_type(self) -> bool:
         return True
 
+
 class UnspecifiedType(TypeInfo):
     def __init__(self, die: DIE):
         name: str = get_die_name(die)
-        size = 0 # die.attributes["DW_AT_byte_size"].value
+        size = 0  # die.attributes["DW_AT_byte_size"].value
         super().__init__(name, size)
 
     def is_base_type(self) -> bool:
         return True
+
 
 class PointerType(TypeInfo):
     def __init__(self, die: DIE):
